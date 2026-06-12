@@ -60,12 +60,20 @@ export default function NewLeadScanner({ onLeadsAdded, onLeadSingleAdded }: NewL
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate B2B prospects.');
+      const responseText = await response.text();
+      let responseData: any;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (jsonErr) {
+        console.error('Failed to parse search leads JSON response:', responseText);
+        throw new Error(`Server returned a non-JSON response (${response.status}): ${responseText.substring(0, 150)}...`);
       }
 
-      const rawLeads = await response.json();
+      if (!response.ok) {
+        throw new Error(responseData?.error || `Failed to generate B2B prospects (Status: ${response.status}).`);
+      }
+
+      const rawLeads = responseData;
       if (Array.isArray(rawLeads) && rawLeads.length > 0) {
         // Enforce safe default formats and assign a creation date
         const validatedLeads: Lead[] = rawLeads.map((lead: any, idx: number) => ({
@@ -113,12 +121,20 @@ export default function NewLeadScanner({ onLeadsAdded, onLeadSingleAdded }: NewL
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Audit analysis failed.');
+      const responseText = await response.text();
+      let responseData: any;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (jsonErr) {
+        console.error('Failed to parse audit website JSON response:', responseText);
+        throw new Error(`Server returned a non-JSON response (${response.status}): ${responseText.substring(0, 150)}...`);
       }
 
-      const parsedLead = await response.json();
+      if (!response.ok) {
+        throw new Error(responseData?.error || `Audit analysis failed (Status: ${response.status}).`);
+      }
+
+      const parsedLead = responseData;
       if (parsedLead && parsedLead.businessName) {
         const validatedLead: Lead = {
           ...parsedLead,

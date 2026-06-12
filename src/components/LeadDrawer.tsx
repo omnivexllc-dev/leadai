@@ -90,11 +90,20 @@ export default function LeadDrawer({ lead, onClose, onSaveLeadChanges, consultan
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to content draft from copywriting server.');
+      const responseText = await response.text();
+      let responseData: any;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (jsonErr) {
+        console.error('Failed to parse rewrite outreach JSON response:', responseText);
+        throw new Error(`Server returned a non-JSON response (${response.status}): ${responseText.substring(0, 150)}...`);
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(responseData?.error || `Failed to draft copywriting content (Status: ${response.status}).`);
+      }
+
+      const data = responseData;
       if (data && data.body) {
         setSubject(data.subject);
         setBody(data.body);
