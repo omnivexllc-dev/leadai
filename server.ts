@@ -271,7 +271,10 @@ Do not include any extra text. Return only valid JSON.
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { 
+        middlewareMode: true,
+        hmr: false // Explicitly disable programmatic HMR to prevent WebSocket port conflicts on restarts
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
