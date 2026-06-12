@@ -13,6 +13,12 @@ const PORT = 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
+// Request logging middleware to diagnose API routes and connection issues
+app.use((req, res, next) => {
+  console.log(`[Express Incoming] ${req.method} ${req.path}`);
+  next();
+});
+
 // Lazy initializer for Gemini SDK as per guidelines
 let aiInstance: GoogleGenAI | null = null;
 function getAI(): GoogleGenAI {
