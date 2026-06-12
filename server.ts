@@ -39,6 +39,27 @@ function getAI(): GoogleGenAI {
   return aiInstance;
 }
 
+function getDeeperErrorMessage(error: any): string {
+  let msg = error?.message || String(error);
+  
+  if (typeof msg === 'string') {
+    try {
+      const parsed = JSON.parse(msg);
+      if (parsed?.error?.message) {
+        msg = parsed.error.message;
+      }
+    } catch (e) {
+      // ignore JSON parse if statement was not an object string
+    }
+  }
+
+  if (msg.includes('exceeded your current quota') || msg.includes('429')) {
+    return 'Your Gemini API Key has exceeded its usage quota/rate limits. Please check your billing details or wait a moment before retrying.';
+  }
+  
+  return msg;
+}
+
 // -----------------------------------------------------
 // API Route: Generate B2B Website Leads
 // -----------------------------------------------------
@@ -113,7 +134,7 @@ Return a direct JSON array of these Lead objects: Lead[]. Ensure your analysis i
     res.json(JSON.parse(text));
   } catch (error: any) {
     console.error('Lead Generation Error:', error);
-    res.status(500).json({ error: error.message || 'An unexpected error occurred during lead generation.' });
+    res.status(500).json({ error: getDeeperErrorMessage(error) });
   }
 });
 
@@ -194,7 +215,7 @@ Return only valid, raw JSON.
     res.json(JSON.parse(text));
   } catch (error: any) {
     console.error('Custom Audit Error:', error);
-    res.status(500).json({ error: error.message || 'An unexpected error occurred during custom website audit.' });
+    res.status(500).json({ error: getDeeperErrorMessage(error) });
   }
 });
 
@@ -261,7 +282,7 @@ Do not include any extra text. Return only valid JSON.
     res.json(JSON.parse(text));
   } catch (error: any) {
     console.error('Outreach Rewrite Error:', error);
-    res.status(500).json({ error: error.message || 'An unexpected error occurred during email copywriting.' });
+    res.status(500).json({ error: getDeeperErrorMessage(error) });
   }
 });
 
