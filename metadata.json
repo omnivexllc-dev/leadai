@@ -1,0 +1,6 @@
+{
+  "name": "Web Design Lead Finder",
+  "description": "B2B client acquisition, website audit diagnostic system and outbound outreach copywriting tools using Gemini 3.5 Flash.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
