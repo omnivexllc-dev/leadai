@@ -1,6 +1,6 @@
 {
   "name": "Web Design Lead Finder",
-  "description": "B2B client acquisition, website audit diagnostic system and outbound outreach copywriting tools using Gemini 3.5 Flash.",
+  "description": "LeadGenius AI - A production-ready full-stack B2B SaaS platform that helps agencies find qualified leads, analyze websites, discover decision makers, verify emails, and manage active cold outreach campaigns.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

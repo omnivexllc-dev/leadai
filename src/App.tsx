@@ -4,371 +4,655 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Building2, Download, Layers, Flame, RefreshCw, BarChart2, ShieldCheck, Mail } from 'lucide-react';
-import { AnimatePresence } from 'motion/react';
+import { 
+  LayoutDashboard, Search, Smartphone, Cpu, Users, Mail, Zap, Layers, FileText, 
+  Settings, CreditCard, Shield, Sun, Moon, Sparkles, Building2, LogOut, Menu, Bell
+} from 'lucide-react';
 
-// Custom components
-import StatsCards from './components/StatsCards';
-import ConsultantSettings from './components/ConsultantSettings';
-import NewLeadScanner from './components/NewLeadScanner';
-import LeadsFilters from './components/LeadsFilters';
-import LeadCard from './components/LeadCard';
-import LeadDrawer from './components/LeadDrawer';
+// Custom modular components
+import SaaSDashboard from './components/SaaSDashboard';
+import LeadFinderTab from './components/LeadFinderTab';
+import WebsiteAnalyzerTab from './components/WebsiteAnalyzerTab';
+import ResearchAgentTab from './components/ResearchAgentTab';
+import DecisionMakersTab from './components/DecisionMakersTab';
+import OutreachStudioTab from './components/OutreachStudioTab';
+import CampaignManagerTab from './components/CampaignManagerTab';
+import CRMKanbanTab from './components/CRMKanbanTab';
+import ProposalGeneratorTab from './components/ProposalGeneratorTab';
+import TeamCollaborationTab from './components/TeamCollaborationTab';
+import BillingTab from './components/BillingTab';
+import AdminPanelTab from './components/AdminPanelTab';
 
-// Static assets & structures
-import { Lead, ConsultantProfile, LeadStatus, PriorityLevel } from './types';
-import { DEMO_LEADS, INITIAL_CONSULTANT_PROFILE } from './data';
+// Static demo arrays
+import { Lead, ConsultantProfile, Campaign, TeamMember, ActivityLog, Notification, Proposal, CRMStage, LeadStatus, CRMNote, CRMTask } from './types';
+import { 
+  DEMO_LEADS, INITIAL_CONSULTANT_PROFILE, INITIAL_CAMPAIGNS, 
+  INITIAL_TEAM_MEMBERS, INITIAL_ACTIVITY_LOGS, INITIAL_NOTIFICATIONS, INITIAL_PROPOSALS 
+} from './data';
 
 export default function App() {
+  // App primary states
   const [leads, setLeads] = useState<Lead[]>([]);
   const [consultant, setConsultant] = useState<ConsultantProfile>(INITIAL_CONSULTANT_PROFILE);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [currentPlanId, setCurrentPlanId] = useState<string>('plan-growth');
 
-  // Filters State
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPriority, setSelectedPriority] = useState('All');
-  const [selectedStatus, setSelectedStatus] = useState('All');
-  const [orderBy, setOrderBy] = useState('newest');
+  // View states
+  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [isDark, setIsDark] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
-  // Load from LocalStorage on mount
+  // Load cache on mount
   useEffect(() => {
     try {
-      const cachedLeads = localStorage.getItem('b2b_web_design_leads');
-      const cachedProfile = localStorage.getItem('b2b_web_design_profile');
+      const cachedLeads = localStorage.getItem('lg_leads');
+      const cachedProfile = localStorage.getItem('lg_profile');
+      const cachedCampaigns = localStorage.getItem('lg_campaigns');
+      const cachedMembers = localStorage.getItem('lg_members');
+      const cachedActivities = localStorage.getItem('lg_activities');
+      const cachedNotifications = localStorage.getItem('lg_notifications');
+      const cachedProposals = localStorage.getItem('lg_proposals');
+      const cachedPlan = localStorage.getItem('lg_plan_id');
+      const cachedTheme = localStorage.getItem('lg_is_dark');
 
-      if (cachedLeads) {
-        setLeads(JSON.parse(cachedLeads));
-      } else {
-        // Fallback to load default curated demo leads on very first open
+      if (cachedLeads) setLeads(JSON.parse(cachedLeads));
+      else {
         setLeads(DEMO_LEADS);
-        localStorage.setItem('b2b_web_design_leads', JSON.stringify(DEMO_LEADS));
+        localStorage.setItem('lg_leads', JSON.stringify(DEMO_LEADS));
       }
 
-      if (cachedProfile) {
-        setConsultant(JSON.parse(cachedProfile));
-      } else {
-        localStorage.setItem('b2b_web_design_profile', JSON.stringify(INITIAL_CONSULTANT_PROFILE));
+      if (cachedProfile) setConsultant(JSON.parse(cachedProfile));
+      else {
+        localStorage.setItem('lg_profile', JSON.stringify(INITIAL_CONSULTANT_PROFILE));
       }
+
+      if (cachedCampaigns) setCampaigns(JSON.parse(cachedCampaigns));
+      else {
+        setCampaigns(INITIAL_CAMPAIGNS);
+        localStorage.setItem('lg_campaigns', JSON.stringify(INITIAL_CAMPAIGNS));
+      }
+
+      if (cachedMembers) setMembers(JSON.parse(cachedMembers));
+      else {
+        setMembers(INITIAL_TEAM_MEMBERS);
+        localStorage.setItem('lg_members', JSON.stringify(INITIAL_TEAM_MEMBERS));
+      }
+
+      if (cachedActivities) setActivities(JSON.parse(cachedActivities));
+      else {
+        setActivities(INITIAL_ACTIVITY_LOGS);
+        localStorage.setItem('lg_activities', JSON.stringify(INITIAL_ACTIVITY_LOGS));
+      }
+
+      if (cachedNotifications) setNotifications(JSON.parse(cachedNotifications));
+      else {
+        setNotifications(INITIAL_NOTIFICATIONS);
+        localStorage.setItem('lg_notifications', JSON.stringify(INITIAL_NOTIFICATIONS));
+      }
+
+      if (cachedProposals) setProposals(JSON.parse(cachedProposals));
+      else {
+        setProposals(INITIAL_PROPOSALS);
+        localStorage.setItem('lg_proposals', JSON.stringify(INITIAL_PROPOSALS));
+      }
+
+      if (cachedPlan) setCurrentPlanId(cachedPlan);
+      if (cachedTheme) setIsDark(JSON.parse(cachedTheme));
+
     } catch (e) {
-      console.error('LocalStorage load failed, fallback to defaults:', e);
+      console.error('LocalStorage load issue, using fallback demo sets:', e);
       setLeads(DEMO_LEADS);
+      setCampaigns(INITIAL_CAMPAIGNS);
+      setMembers(INITIAL_TEAM_MEMBERS);
+      setActivities(INITIAL_ACTIVITY_LOGS);
+      setNotifications(INITIAL_NOTIFICATIONS);
+      setProposals(INITIAL_PROPOSALS);
     }
   }, []);
 
-  // Save Leads to LocalStorage whenever they change
+  // Save changes wrapper
   const saveLeadsToDB = (updatedLeads: Lead[]) => {
     setLeads(updatedLeads);
-    localStorage.setItem('b2b_web_design_leads', JSON.stringify(updatedLeads));
+    localStorage.setItem('lg_leads', JSON.stringify(updatedLeads));
   };
 
-  const handleSaveConsultant = (updatedProfile: ConsultantProfile) => {
-    setConsultant(updatedProfile);
-    localStorage.setItem('b2b_web_design_profile', JSON.stringify(updatedProfile));
+  const saveCampaignsToDB = (updatedCampaigns: Campaign[]) => {
+    setCampaigns(updatedCampaigns);
+    localStorage.setItem('lg_campaigns', JSON.stringify(updatedCampaigns));
   };
 
-  // Add multiple leads (bulk finders)
-  const handleLeadsAdded = (newLeads: Lead[]) => {
-    // Avoid exact website URL duplicates
-    const existingUrls = new Set(leads.map(l => l.websiteUrl.toLowerCase().trim()));
-    const filteredNew = newLeads.filter(l => !existingUrls.has(l.websiteUrl.toLowerCase().trim()));
-    
-    const updated = [...filteredNew, ...leads];
-    saveLeadsToDB(updated);
+  const saveMembersToDB = (updatedMembers: TeamMember[]) => {
+    setMembers(updatedMembers);
+    localStorage.setItem('lg_members', JSON.stringify(updatedMembers));
   };
 
-  // Add single audited lead & open instantly in drawer
+  const saveActivitiesToDB = (updatedActivities: ActivityLog[]) => {
+    setActivities(updatedActivities);
+    localStorage.setItem('lg_activities', JSON.stringify(updatedActivities));
+  };
+
+  const saveNotificationsToDB = (updatedNotifications: Notification[]) => {
+    setNotifications(updatedNotifications);
+    localStorage.setItem('lg_notifications', JSON.stringify(updatedNotifications));
+  };
+
+  const saveProposalsToDB = (updatedProposals: Proposal[]) => {
+    setProposals(updatedProposals);
+    localStorage.setItem('lg_proposals', JSON.stringify(updatedProposals));
+  };
+
+  const handleToggleTheme = () => {
+    const nextTheme = !isDark;
+    setIsDark(nextTheme);
+    localStorage.setItem('lg_is_dark', JSON.stringify(nextTheme));
+  };
+
+  // Add individual actions
   const handleLeadSingleAdded = (newLead: Lead) => {
-    // Replace if exact duplicate URL exists, or append
-    const cleanedUrl = newLead.websiteUrl.toLowerCase().trim();
-    const filtered = leads.filter(l => l.websiteUrl.toLowerCase().trim() !== cleanedUrl);
-    const updated = [newLead, ...filtered];
-    
+    const newUrl = (newLead?.websiteUrl || '').toLowerCase().trim();
+    const updated = [newLead, ...leads.filter(l => (l?.websiteUrl || '').toLowerCase().trim() !== newUrl)];
     saveLeadsToDB(updated);
-    setSelectedLead(newLead); // Trigger micro-interaction opening the drawer instantly!
+
+    // Append discovery event
+    const newLog: ActivityLog = {
+      id: `act-${Date.now()}`,
+      userId: 'team-1',
+      userName: 'Alex Vance',
+      action: 'Imported scanned prospect',
+      target: newLead.businessName,
+      createdAt: new Date().toISOString(),
+      type: 'lead'
+    };
+    saveActivitiesToDB([newLog, ...activities]);
   };
 
-  // In-line status change dropdown hook
-  const handleStatusChange = (id: string, newStatus: LeadStatus) => {
-    const updated = leads.map(l => l.id === id ? { ...l, status: newStatus } : l);
+  const handleLeadsAdded = (newLeads: Lead[]) => {
+    const urls = new Set(leads.map(l => (l?.websiteUrl || '').toLowerCase().trim()));
+    const uniques = newLeads.filter(l => !urls.has((l?.websiteUrl || '').toLowerCase().trim()));
+    const updated = [...uniques, ...leads];
     saveLeadsToDB(updated);
-    // Sync current drawer if open
-    if (selectedLead && selectedLead.id === id) {
-      setSelectedLead({ ...selectedLead, status: newStatus });
-    }
+
+    // Append log
+    const newLog: ActivityLog = {
+      id: `act-${Date.now()}`,
+      userId: 'team-1',
+      userName: 'Alex Vance',
+      action: `Bulk scanned & imported ${newLeads.length} leads`,
+      target: 'SaaS Active Directory',
+      createdAt: new Date().toISOString(),
+      type: 'lead'
+    };
+    saveActivitiesToDB([newLog, ...activities]);
   };
 
-  // Single Lead Changes coming back from the edit drawers
-  const handleSaveLeadChanges = (updatedLead: Lead) => {
-    const updated = leads.map(l => l.id === updatedLead.id ? updatedLead : l);
-    saveLeadsToDB(updated);
-    setSelectedLead(updatedLead);
+  const handleAddCampaign = (camp: Campaign) => {
+    const updated = [camp, ...campaigns];
+    saveCampaignsToDB(updated);
+
+    const newLog: ActivityLog = {
+      id: `act-${Date.now()}`,
+      userId: 'team-1',
+      userName: 'Alex Vance',
+      action: 'Created sequence campaign',
+      target: camp.name,
+      createdAt: new Date().toISOString(),
+      type: 'campaign'
+    };
+    saveActivitiesToDB([newLog, ...activities]);
   };
 
-  // Delete lead from cache
-  const handleDeleteLead = (id: string) => {
-    if (window.confirm('Are you sure you want to remove this prospect from your pipeline?')) {
-      const updated = leads.filter(l => l.id !== id);
-      saveLeadsToDB(updated);
-      if (selectedLead && selectedLead.id === id) {
-        setSelectedLead(null);
+  const handleToggleCampaignStatus = (id: string) => {
+    const updated = campaigns.map(c => {
+      if (c.id === id) {
+        const nextStatus = (c.status === 'Active' ? 'Paused' : 'Active') as 'Active' | 'Paused';
+        return { ...c, status: nextStatus };
       }
-    }
-  };
-
-  // Global actions
-  const handleClearAll = () => {
-    if (window.confirm('WARNING: You are about to wipe your entire lead generation pipeline records. This cannot be undone. Proceed?')) {
-      saveLeadsToDB([]);
-      setSelectedLead(null);
-    }
-  };
-
-  const handleLoadDemo = () => {
-    if (window.confirm('Do you want to restore the default high-quality B2B demo targets into your workspace?')) {
-      saveLeadsToDB(DEMO_LEADS);
-      setSelectedLead(null);
-    }
-  };
-
-  const handleExportCSV = () => {
-    if (leads.length === 0) {
-      alert('Your pipeline database is currently empty. Find some leads first!');
-      return;
-    }
-
-    try {
-      const headers = [
-        'Business Name',
-        'Industry',
-        'Website URL',
-        'Contact Person',
-        'Title',
-        'Email Address',
-        'Phone Number',
-        'Company Size',
-        'Website Quality Grade',
-        'Priority',
-        'Current Stage Status',
-        'Target Budget Potential',
-        'Identified Challenges Snapshot'
-      ];
-
-      const csvRows = [headers.join(',')];
-
-      for (const l of leads) {
-        const issuesSummary = Object.entries(l.issues)
-          .map(([k, v]) => `${k.toUpperCase()}: ${(v as string[]).join(' | ')}`)
-          .join('; ');
-
-        const row = [
-          `"${l.businessName.replace(/"/g, '""')}"`,
-          `"${l.industry.replace(/"/g, '""')}"`,
-          `"${l.websiteUrl}"`,
-          `"${l.contactPerson ? l.contactPerson.replace(/"/g, '""') : 'N/A'}"`,
-          `"${l.contactTitle ? l.contactTitle.replace(/"/g, '""') : 'N/A'}"`,
-          `"${l.email}"`,
-          `"${l.phone}"`,
-          `"${l.companySize}"`,
-          l.websiteScore,
-          `"${l.priority}"`,
-          `"${l.status}"`,
-          `"${l.budgetPotential}"`,
-          `"${issuesSummary.replace(/"/g, '""')}"`
-        ];
-        csvRows.push(row.join(','));
-      }
-
-      const csvString = csvRows.join('\n');
-      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'b2b_web_design_prospects_pipeline.csv');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to generate local CSV file.');
-    }
-  };
-
-  // Filter & Sort Logic
-  const getFilteredLeads = () => {
-    let filtered = [...leads];
-
-    // Search Query (ByName, Industry, website, Contact and city)
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(l => 
-        l.businessName.toLowerCase().includes(query) ||
-        l.industry.toLowerCase().includes(query) ||
-        l.websiteUrl.toLowerCase().includes(query) ||
-        (l.contactPerson && l.contactPerson.toLowerCase().includes(query)) ||
-        l.whyNewWebsite.toLowerCase().includes(query)
-      );
-    }
-
-    // Priority level filter
-    if (selectedPriority !== 'All') {
-      filtered = filtered.filter(l => l.priority === selectedPriority);
-    }
-
-    // Pipeline status filter
-    if (selectedStatus !== 'All') {
-      filtered = filtered.filter(l => l.status === selectedStatus);
-    }
-
-    // Ordering/Sorting
-    filtered.sort((a, b) => {
-      if (orderBy === 'newest') {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateB - dateA; // descending
-      }
-      if (orderBy === 'worst-score') {
-        return a.websiteScore - b.websiteScore; // ascending (lower score is better redesign lead)
-      }
-      if (orderBy === 'best-budget') {
-        const getBudgetScore = (budgetStr: string) => {
-          const numbers = budgetStr.replace(/[^0-9]/g, '');
-          return parseInt(numbers) || 0;
-        };
-        return getBudgetScore(b.budgetPotential) - getBudgetScore(a.budgetPotential); // descending
-      }
-      if (orderBy === 'priority') {
-        const priorityVals = { Hot: 3, Warm: 2, Cold: 1 };
-        return priorityVals[b.priority] - priorityVals[a.priority];
-      }
-      return 0;
+      return c;
     });
-
-    return filtered;
+    saveCampaignsToDB(updated);
   };
 
-  const filteredLeads = getFilteredLeads();
+  const handleInviteTeamSeat = (m: TeamMember) => {
+    const updated = [...members, m];
+    saveMembersToDB(updated);
+
+    const newLog: ActivityLog = {
+      id: `act-${Date.now()}`,
+      userId: 'team-1',
+      userName: 'Alex Vance',
+      action: 'Allocated collaboration seat to',
+      target: m.name,
+      createdAt: new Date().toISOString(),
+      type: 'team'
+    };
+    saveActivitiesToDB([newLog, ...activities]);
+  };
+
+  const handleMarkNotificationsRead = () => {
+    const updated = notifications.map(n => ({ ...n, read: true }));
+    saveNotificationsToDB(updated);
+  };
+
+  const handleAddProposal = (prop: Proposal) => {
+    const updated = [prop, ...proposals];
+    saveProposalsToDB(updated);
+
+    const newLog: ActivityLog = {
+      id: `act-${Date.now()}`,
+      userId: 'team-1',
+      userName: 'Alex Vance',
+      action: 'Generated smart AI business proposal for',
+      target: prop.leadName,
+      createdAt: new Date().toISOString(),
+      type: 'crm'
+    };
+    saveActivitiesToDB([newLog, ...activities]);
+  };
+
+  // CRM status operations
+  const handleUpdateLeadStage = (leadId: string, stage: CRMStage, status: LeadStatus) => {
+    const updated = leads.map(l => l.id === leadId ? { ...l, crmStage: stage, status } : l);
+    saveLeadsToDB(updated);
+
+    const targetLead = leads.find(l => l.id === leadId);
+    if (targetLead) {
+      const newLog: ActivityLog = {
+        id: `act-${Date.now()}`,
+        userId: 'team-2',
+        userName: 'Marcus Brody',
+        action: `Moved deal to "${stage}" for`,
+        target: targetLead.businessName,
+        createdAt: new Date().toISOString(),
+        type: 'crm'
+      };
+      saveActivitiesToDB([newLog, ...activities]);
+    }
+  };
+
+  const handleAddCRMNote = (leadId: string, note: CRMNote) => {
+    const updated = leads.map(l => {
+      if (l.id === leadId) {
+        return { ...l, notes: [...(l.notes || []), note] };
+      }
+      return l;
+    });
+    saveLeadsToDB(updated);
+  };
+
+  const handleAddCRMTask = (leadId: string, task: CRMTask) => {
+    const updated = leads.map(l => {
+      if (l.id === leadId) {
+        return { ...l, tasks: [...(l.tasks || []), task] };
+      }
+      return l;
+    });
+    saveLeadsToDB(updated);
+  };
+
+  const handleToggleCRMTask = (leadId: string, taskId: string) => {
+    const updated = leads.map(l => {
+      if (l.id === leadId) {
+        const tasks = (l.tasks || []).map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
+        return { ...l, tasks };
+      }
+      return l;
+    });
+    saveLeadsToDB(updated);
+  };
+
+  const handleUpgradePlan = (planId: string) => {
+    setCurrentPlanId(planId);
+    localStorage.setItem('lg_plan_id', planId);
+
+    const newLog: ActivityLog = {
+      id: `act-${Date.now()}`,
+      userId: 'team-3',
+      userName: 'Lina Dupont',
+      action: 'Upgraded subscription tier to',
+      target: planId.split('-')[1].toUpperCase(),
+      createdAt: new Date().toISOString(),
+      type: 'billing'
+    };
+    saveActivitiesToDB([newLog, ...activities]);
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans transition-all duration-300 antialiased selection:bg-blue-600/20">
-      {/* Upper bar workspace status */}
-      <nav className="h-16 bg-slate-900 text-white flex items-center justify-between px-6 shrink-0 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-lg text-white">S</div>
-          <h1 className="text-lg font-bold tracking-tight">SiteScout AI</h1>
-        </div>
-        <div className="flex items-center gap-4 text-xs">
-          <div className="hidden sm:flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-            <span className="text-slate-400 text-[10px] uppercase font-bold">Dynamic Engine:</span>
-            <span className="text-xs font-semibold text-blue-400">Gemini 3.5 Active</span>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] text-slate-400 leading-none">Pipeline Load</p>
-            <p className="text-xs font-semibold text-slate-200 mt-1">{leads.length} Sites Stored</p>
-          </div>
-        </div>
-      </nav>
-
-      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-6 space-y-6">
+    <div className={`min-h-screen flex font-sans select-none antialiased ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+      
+      {/* LEFT SIDEBAR BAR PANEL */}
+      <aside className={`shrink-0 border-r transition-all duration-300 flex flex-col justify-between ${
+        sidebarOpen ? 'w-64' : 'w-16'
+      } ${
+        isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+      } print:hidden`}>
         
-        {/* Header Block */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-5">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <Building2 className="w-7 h-7 text-blue-600 shrink-0" /> Web Design Client Finder
-            </h1>
-            <p className="text-xs text-slate-500 mt-1 max-w-xl leading-relaxed">
-              Identify high-potential local businesses needing modern responsive design, speed enhancements, and SEO strategy. Evaluate website gaps and write pristine, personalized B2B outreach templates with server-side Gemini 3.5 Flash.
-            </p>
-          </div>
-          <div className="bg-white border border-slate-200 shadow-sm px-4 py-2 rounded-xl flex items-center gap-2.5">
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-100">
-              <BarChart2 className="w-4 h-4" />
+        {/* Core Logo heading */}
+        <div className="space-y-6">
+          <div className={`h-16 flex items-center justify-between px-4 border-b ${
+            isDark ? 'border-slate-800' : 'border-slate-150'
+          }`}>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0 font-black text-sm">
+                L
+              </div>
+              {sidebarOpen && (
+                <span className={`text-sm font-black tracking-tight truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  LeadGenius AI
+                </span>
+              )}
             </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase font-bold">Active Pipeline Stage</p>
-              <p className="text-xs text-slate-800 font-bold mt-0.5">
-                {leads.filter(l => l.status === 'Interested' || l.status === 'Meeting').length} Opportunities
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-1 text-slate-400 hover:text-slate-600 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Links list */}
+          <nav className="px-2.5 space-y-1.5 overflow-y-auto max-h-[75vh]">
+            <p className={`text-[10px] uppercase tracking-wider font-black px-2 pb-1.5 ${
+              sidebarOpen ? 'block' : 'hidden'
+            } ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+              Main Workspace
+            </p>
+
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'dashboard'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>SaaS Overview</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('lead-finder')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'lead-finder'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Search className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>AI Lead Finder</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('website-analyzer')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'website-analyzer'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Smartphone className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>Website Analyzer</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('research-agent')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'research-agent'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Cpu className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>AI Research Agent</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('contacts-verifier')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'contacts-verifier'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Users className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>Decision & Verify</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('outreach-studio')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'outreach-studio'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Mail className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>Outreach Studio</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('sequences-manager')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'sequences-manager'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Zap className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>Email Campaigns</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('pipeline-crm')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'pipeline-crm'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Layers className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>Kanban CRM Board</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('proposals')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'proposals'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <FileText className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>AI Proposals</span>}
+            </button>
+
+            <p className={`text-[10px] uppercase tracking-wider font-black px-2 pt-4 pb-1.5 ${
+              sidebarOpen ? 'block' : 'hidden'
+            } ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+              System & Billing
+            </p>
+
+            <button
+              onClick={() => setActiveTab('team')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'team'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Settings className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>Team Collaboration</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('billing')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'billing'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <CreditCard className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>Billing & Quota</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('admin')}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'admin'
+                  ? 'bg-blue-600 text-white font-black shadow'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Shield className="w-4 h-4 shrink-0" />
+              {sidebarOpen && <span>Admin Panel</span>}
+            </button>
+          </nav>
+        </div>
+
+        {/* Profile Footer */}
+        {sidebarOpen && (
+          <div className={`p-4 border-t flex items-center gap-3 ${
+            isDark ? 'border-slate-800' : 'border-slate-150'
+          }`}>
+            <span className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs text-white">
+              AV
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className={`text-xs font-bold truncate leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                {consultant.name}
+              </p>
+              <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                {consultant.company}
               </p>
             </div>
           </div>
-        </div>
+        )}
+      </aside>
 
-        {/* Section 1: Dashboard Stats cards */}
-        <StatsCards leads={leads} />
-
-        {/* Section 2: Consultant Profile settings */}
-        <ConsultantSettings profile={consultant} onSave={handleSaveConsultant} />
-
-        {/* Section 3: New Lead Scanning module (Bulk finder / Single auditor) */}
-        <NewLeadScanner 
-          onLeadsAdded={handleLeadsAdded} 
-          onLeadSingleAdded={handleLeadSingleAdded} 
-        />
-
-        {/* Section 4: Filters and Leads List */}
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <Layers className="w-4.5 h-4.5 text-blue-600" /> Lead Pipeline Matrix ({filteredLeads.length})
-            </h3>
-            <p className="text-[11px] text-slate-500">
-              Ranked automatically from highest to lowest redesign potential
-            </p>
+      {/* CORE WORKSPACE SHEET WRAPPER */}
+      <div className="flex-1 flex flex-col min-w-0">
+        
+        {/* UPPER NAVIGATION BAR HEADER */}
+        <header className={`h-16 border-b shrink-0 px-6 flex items-center justify-between print:hidden ${
+          isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+        }`}>
+          <div className="flex items-center gap-3">
+            <span className={`text-xs uppercase tracking-wide font-black px-2.5 py-1 bg-slate-100 dark:bg-slate-950 rounded-lg text-blue-500 border border-slate-200 dark:border-slate-900`}>
+              B2B Outbound Engine Active
+            </span>
           </div>
 
-          <LeadsFilters
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            selectedPriority={selectedPriority}
-            setSelectedPriority={setSelectedPriority}
-            selectedStatus={selectedStatus}
-            setSelectedStatus={setSelectedStatus}
-            orderBy={orderBy}
-            setOrderBy={setOrderBy}
-            onClearAll={handleClearAll}
-            onLoadDemo={handleLoadDemo}
-            onExportCSV={handleExportCSV}
-            totalCount={leads.length}
-          />
+          <div className="flex items-center gap-4 text-xs font-sans">
+            {/* Dark Theme toggle */}
+            <button
+              onClick={handleToggleTheme}
+              className={`p-2 border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 transition-colors cursor-pointer ${
+                isDark ? 'border-slate-800' : 'border-slate-250'
+              }`}
+            >
+              {isDark ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4" />}
+            </button>
+          </div>
+        </header>
 
-          {filteredLeads.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredLeads.map(lead => (
-                <LeadCard
-                  key={lead.id}
-                  lead={lead}
-                  onSelect={setSelectedLead}
-                  onStatusChange={handleStatusChange}
-                  onDelete={handleDeleteLead}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="border border-dashed border-slate-200 rounded-xl p-12 text-center bg-white shadow-sm">
-              <Sparkles className="w-8 h-8 text-slate-400 mx-auto mb-3 stroke-1.5" />
-              <p className="text-slate-700 text-xs font-semibold">No high-potential leads found matching details.</p>
-              <p className="text-slate-500 text-[11px] mt-1">Try expanding filters, clearing search variables, or searching a new sector!</p>
-            </div>
+        {/* COMPONENT RENDER BLOCK */}
+        <main className="flex-1 overflow-y-auto p-6 max-w-7xl w-full mx-auto print:p-0">
+          {activeTab === 'dashboard' && (
+            <SaaSDashboard 
+              leads={leads} 
+              campaigns={campaigns} 
+              activities={activities}
+              notifications={notifications}
+              onMarkAllRead={handleMarkNotificationsRead}
+              onNavigateToTab={setActiveTab}
+              isDark={isDark}
+            />
           )}
-        </div>
-      </main>
 
-      {/* Floating Detailed Audit & Outreach slide-out Drawer */}
-      <AnimatePresence>
-        {selectedLead && (
-          <LeadDrawer
-            lead={selectedLead}
-            onClose={() => setSelectedLead(null)}
-            onSaveLeadChanges={handleSaveLeadChanges}
-            consultant={consultant}
-          />
-        )}
-      </AnimatePresence>
+          {activeTab === 'lead-finder' && (
+            <LeadFinderTab 
+              onLeadsAdded={handleLeadsAdded} 
+              onLeadSingleAdded={handleLeadSingleAdded}
+              isDark={isDark}
+            />
+          )}
 
-      {/* Footer copyright */}
-      <footer className="bg-white border-t border-slate-150 py-6 text-center mt-12 text-[11px] text-slate-500">
-        <p>© 2026 SiteScout AI • Professional B2B Web Design Lead Generation & CRM Workspace. Stored locally in sandbox browser.</p>
-      </footer>
+          {activeTab === 'website-analyzer' && (
+            <WebsiteAnalyzerTab isDark={isDark} />
+          )}
+
+          {activeTab === 'research-agent' && (
+            <ResearchAgentTab isDark={isDark} />
+          )}
+
+          {activeTab === 'contacts-verifier' && (
+            <DecisionMakersTab isDark={isDark} />
+          )}
+
+          {activeTab === 'outreach-studio' && (
+            <OutreachStudioTab 
+              leads={leads} 
+              consultant={consultant} 
+              isDark={isDark}
+            />
+          )}
+
+          {activeTab === 'sequences-manager' && (
+            <CampaignManagerTab 
+              campaigns={campaigns} 
+              onAddCampaign={handleAddCampaign}
+              onToggleStatus={handleToggleCampaignStatus}
+              isDark={isDark}
+            />
+          )}
+
+          {activeTab === 'pipeline-crm' && (
+            <CRMKanbanTab 
+              leads={leads}
+              onUpdateLeadStage={handleUpdateLeadStage}
+              onAddNote={handleAddCRMNote}
+              onAddTask={handleAddCRMTask}
+              onToggleTask={handleToggleCRMTask}
+              isDark={isDark}
+            />
+          )}
+
+          {activeTab === 'proposals' && (
+            <ProposalGeneratorTab 
+              leads={leads} 
+              consultant={consultant} 
+              proposals={proposals}
+              onAddProposal={handleAddProposal}
+              isDark={isDark}
+            />
+          )}
+
+          {activeTab === 'team' && (
+            <TeamCollaborationTab 
+              members={members} 
+              onInviteMember={handleInviteTeamSeat} 
+              activities={activities}
+              isDark={isDark}
+            />
+          )}
+
+          {activeTab === 'billing' && (
+            <BillingTab 
+              currentPlanId={currentPlanId} 
+              onUpgradePlan={handleUpgradePlan} 
+              isDark={isDark}
+            />
+          )}
+
+          {activeTab === 'admin' && (
+            <AdminPanelTab isDark={isDark} />
+          )}
+        </main>
+      </div>
     </div>
   );
 }

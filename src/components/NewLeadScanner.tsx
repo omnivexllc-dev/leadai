@@ -12,11 +12,58 @@ interface NewLeadScannerProps {
   onLeadSingleAdded: (lead: Lead) => void;
 }
 
+interface CountryPreset {
+  name: string;
+  code: string;
+  flag: string;
+  cities: string[];
+}
+
+const COUNTRY_PRESETS: CountryPreset[] = [
+  {
+    name: 'India',
+    code: 'IN',
+    flag: '🇮🇳',
+    cities: ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Pune']
+  },
+  {
+    name: 'USA',
+    code: 'US',
+    flag: '🇺🇸',
+    cities: ['Miami, FL', 'Austin, TX', 'New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'San Francisco, CA']
+  },
+  {
+    name: 'Canada',
+    code: 'CA',
+    flag: '🇨🇦',
+    cities: ['Toronto, ON', 'Vancouver, BC', 'Montreal, QC', 'Calgary, AB', 'Ottawa, ON']
+  },
+  {
+    name: 'Australia',
+    code: 'AU',
+    flag: '🇦🇺',
+    cities: ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide']
+  },
+  {
+    name: 'United Kingdom',
+    code: 'GB',
+    flag: '🇬🇧',
+    cities: ['London', 'Manchester', 'Birmingham', 'Edinburgh', 'Glasgow']
+  },
+  {
+    name: 'France',
+    code: 'FR',
+    flag: '🇫🇷',
+    cities: ['Paris', 'Lyon', 'Marseille', 'Toulouse', 'Nice']
+  }
+];
+
 export default function NewLeadScanner({ onLeadsAdded, onLeadSingleAdded }: NewLeadScannerProps) {
   const [activeTab, setActiveTab] = useState<'search' | 'audit'>('search');
   
   // Search state
-  const [searchLocation, setSearchLocation] = useState('Miami, FL');
+  const [searchLocation, setSearchLocation] = useState('Mumbai, India');
+  const [searchValueCountryCode, setSelectedCountryCode] = useState('IN');
   const [searchIndustry, setSearchIndustry] = useState('Dental Clinics');
   const [searchNotes, setSearchNotes] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -212,29 +259,79 @@ export default function NewLeadScanner({ onLeadsAdded, onLeadSingleAdded }: NewL
             </div>
 
             {/* Location Input */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-slate-400" /> Target Metro Area / Country
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Miami, FL or Austin, TX"
-                className="w-full bg-white border border-slate-250 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2 px-3 text-xs text-slate-800 outline-none shadow-inner"
-                value={searchLocation}
-                onChange={(e) => setSearchLocation(e.target.value)}
-              />
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {locationSuggestions.map(loc => (
-                  <button
-                    key={loc}
-                    type="button"
-                    onClick={() => setSearchLocation(loc)}
-                    className="px-2 py-0.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-[10px] text-slate-600 hover:text-slate-850 rounded transition-colors cursor-pointer"
-                  >
-                    {loc}
-                  </button>
-                ))}
+            <div className="space-y-1.5 flex flex-col justify-between">
+              <div>
+                <label className="text-xs font-bold text-slate-600 flex items-center gap-1.5 mb-1">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" /> Target Metro Area / Country
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Mumbai, India or New York, NY"
+                  className="w-full bg-white border border-slate-250 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg py-2 px-3 text-xs text-slate-800 outline-none shadow-inner"
+                  value={searchLocation}
+                  onChange={(e) => setSearchLocation(e.target.value)}
+                />
+              </div>
+
+              {/* Dynamic Global Presets Market Selector */}
+              <div className="mt-1 bg-slate-50 border border-slate-150 rounded-lg p-2.5 space-y-2">
+                <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center gap-1">
+                  <Globe className="w-3 h-3 text-blue-500" /> Target Global SaaS Market
+                </p>
+                
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1">
+                  {COUNTRY_PRESETS.map((country) => {
+                    const isActive = searchValueCountryCode === country.code;
+                    return (
+                      <button
+                        key={country.code}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCountryCode(country.code);
+                          // Auto set searchLocation to a prominent city of the country withcountry label
+                          const firstCity = country.cities[0];
+                          const suffix = country.name === 'USA' ? 'USA' : country.name;
+                          setSearchLocation(`${firstCity}, ${suffix}`);
+                        }}
+                        className={`flex items-center justify-center gap-1 px-1.5 py-1 rounded border text-[10px] font-semibold transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-blue-600 border-blue-600 text-white shadow-sm font-bold'
+                            : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className="text-[11px]">{country.flag}</span>
+                        <span className="truncate">{country.name === 'United Kingdom' ? 'UK' : country.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* City chips corresponding to the chosen active country tab */}
+                <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase mr-1">Hubs:</span>
+                  {COUNTRY_PRESETS.find(c => c.code === searchValueCountryCode)?.cities.map((city) => {
+                    const countryObj = COUNTRY_PRESETS.find(c => c.code === searchValueCountryCode)!;
+                    const suffix = countryObj.name === 'USA' ? 'USA' : countryObj.name;
+                    const fullLocationName = `${city}, ${suffix}`;
+                    const isSelected = searchLocation.toLowerCase().trim() === fullLocationName.toLowerCase().trim();
+
+                    return (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => setSearchLocation(fullLocationName)}
+                        className={`px-1.5 py-0.5 border text-[10px] rounded transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-blue-100 border-blue-400 text-blue-700 font-bold shadow-sm'
+                            : 'bg-white border-slate-200 hover:bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {city}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
