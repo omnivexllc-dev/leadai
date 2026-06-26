@@ -607,6 +607,8 @@ export default function App() {
               onAddCampaign={handleAddCampaign}
               onToggleStatus={handleToggleCampaignStatus}
               isDark={isDark}
+              leads={leads}
+              consultant={consultant}
             />
           )}
 

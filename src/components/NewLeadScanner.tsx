@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Search, Globe, Sparkles, Building2, MapPin, ListPlus, Loader2, PlayCircle, AlertCircle } from 'lucide-react';
 import { Lead } from '../types';
+import { safeApiRequest } from '../utils/api';
 
 interface NewLeadScannerProps {
   onLeadsAdded: (leads: Lead[]) => void;
@@ -97,7 +98,7 @@ export default function NewLeadScanner({ onLeadsAdded, onLeadSingleAdded }: NewL
     setSearchError(null);
 
     try {
-      const response = await fetch('/api/generate-leads', {
+      const rawLeads = await safeApiRequest('/api/generate-leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -107,20 +108,6 @@ export default function NewLeadScanner({ onLeadsAdded, onLeadSingleAdded }: NewL
         })
       });
 
-      const responseText = await response.text();
-      let responseData: any;
-      try {
-        responseData = JSON.parse(responseText);
-      } catch (jsonErr) {
-        console.error('Failed to parse search leads JSON response:', responseText);
-        throw new Error(`Server returned a non-JSON response (${response.status}): ${responseText.substring(0, 150)}...`);
-      }
-
-      if (!response.ok) {
-        throw new Error(responseData?.error || `Failed to generate B2B prospects (Status: ${response.status}).`);
-      }
-
-      const rawLeads = responseData;
       if (Array.isArray(rawLeads) && rawLeads.length > 0) {
         // Enforce safe default formats and assign a creation date
         const validatedLeads: Lead[] = rawLeads.map((lead: any, idx: number) => ({
@@ -157,7 +144,7 @@ export default function NewLeadScanner({ onLeadsAdded, onLeadSingleAdded }: NewL
         formattedUrl = `https://${formattedUrl}`;
       }
 
-      const response = await fetch('/api/audit-website', {
+      const parsedLead = await safeApiRequest('/api/audit-website', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -168,20 +155,6 @@ export default function NewLeadScanner({ onLeadsAdded, onLeadSingleAdded }: NewL
         })
       });
 
-      const responseText = await response.text();
-      let responseData: any;
-      try {
-        responseData = JSON.parse(responseText);
-      } catch (jsonErr) {
-        console.error('Failed to parse audit website JSON response:', responseText);
-        throw new Error(`Server returned a non-JSON response (${response.status}): ${responseText.substring(0, 150)}...`);
-      }
-
-      if (!response.ok) {
-        throw new Error(responseData?.error || `Audit analysis failed (Status: ${response.status}).`);
-      }
-
-      const parsedLead = responseData;
       if (parsedLead && parsedLead.businessName) {
         const validatedLead: Lead = {
           ...parsedLead,

@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Globe, Shield, RefreshCw, Smartphone, Search, AlertCircle, CheckCircle2, FileText, ChevronRight } from 'lucide-react';
 import { WebsiteMetrics } from '../types';
+import { safeApiRequest } from '../utils/api';
 
 interface WebsiteAnalyzerTabProps {
   isDark: boolean;
@@ -26,18 +27,11 @@ export default function WebsiteAnalyzerTab({ isDark }: WebsiteAnalyzerTabProps) 
     setIssuesList([]);
 
     try {
-      const response = await fetch('/api/audit-website', {
+      const data = await safeApiRequest('/api/audit-website', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url })
       });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to complete website audit scan.');
-      }
-
-      const data = await response.json();
       
       // Construct rich metrics based on response
       const hasSslError = data.issues?.trust?.some((t: string) => t.toLowerCase().includes('ssl') || t.toLowerCase().includes('insecure')) || false;

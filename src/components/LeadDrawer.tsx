@@ -10,6 +10,7 @@ import {
   ChevronDown, Layout, Smartphone, Globe, Zap, Target, ShieldCheck, HelpCircle, Loader2
 } from 'lucide-react';
 import { Lead, ConsultantProfile, WebsiteIssues } from '../types';
+import { safeApiRequest } from '../utils/api';
 
 interface LeadDrawerProps {
   lead: Lead;
@@ -79,7 +80,7 @@ export default function LeadDrawer({ lead, onClose, onSaveLeadChanges, consultan
     setRewriteError(null);
 
     try {
-      const response = await fetch('/api/rewrite-outreach', {
+      const data = await safeApiRequest('/api/rewrite-outreach', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -90,20 +91,6 @@ export default function LeadDrawer({ lead, onClose, onSaveLeadChanges, consultan
         })
       });
 
-      const responseText = await response.text();
-      let responseData: any;
-      try {
-        responseData = JSON.parse(responseText);
-      } catch (jsonErr) {
-        console.error('Failed to parse rewrite outreach JSON response:', responseText);
-        throw new Error(`Server returned a non-JSON response (${response.status}): ${responseText.substring(0, 150)}...`);
-      }
-
-      if (!response.ok) {
-        throw new Error(responseData?.error || `Failed to draft copywriting content (Status: ${response.status}).`);
-      }
-
-      const data = responseData;
       if (data && data.body) {
         setSubject(data.subject);
         setBody(data.body);

@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Users, ShieldCheck, Mail, Linkedin, Search, RefreshCw, CheckCircle2, AlertTriangle, XCircle, Plus, Eye } from 'lucide-react';
 import { DecisionMaker, EmailStatus } from '../types';
+import { safeApiRequest } from '../utils/api';
 
 interface DecisionMakersTabProps {
   isDark: boolean;
@@ -32,18 +33,11 @@ export default function DecisionMakersTab({ isDark }: DecisionMakersTabProps) {
     setDiscoveredMakers([]);
 
     try {
-      const response = await fetch('/api/find-decision-makers', {
+      const data = await safeApiRequest('/api/find-decision-makers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ websiteUrl: website, businessName })
       });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Contact discovery failed.');
-      }
-
-      const data = await response.json();
       setDiscoveredMakers(data);
     } catch (err: any) {
       console.error(err);
@@ -60,18 +54,11 @@ export default function DecisionMakersTab({ isDark }: DecisionMakersTabProps) {
     setVerificationResult(null);
 
     try {
-      const response = await fetch('/api/verify-email', {
+      const data = await safeApiRequest('/api/verify-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: testEmail })
       });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Verification failed.');
-      }
-
-      const data = await response.json();
       setVerificationResult(data);
     } catch (err: any) {
       console.error(err);

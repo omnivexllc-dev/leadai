@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Mail, Send, Copy, Edit2, Check, RefreshCw, Smartphone, Linkedin, MessageSquare, Clipboard } from 'lucide-react';
 import { Lead, ConsultantProfile, OutreachDraft, OutreachChannel } from '../types';
+import { safeApiRequest } from '../utils/api';
 
 interface OutreachStudioTabProps {
   leads: Lead[];
@@ -38,18 +39,11 @@ export default function OutreachStudioTab({ leads, consultant, isDark }: Outreac
     setActiveVarIdx(0);
 
     try {
-      const response = await fetch('/api/generate-outreach-variations', {
+      const data = await safeApiRequest('/api/generate-outreach-variations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead: selectedLead, consultant })
       });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to craft outreach pitches.');
-      }
-
-      const data = await response.json();
       setVariations(data);
     } catch (err: any) {
       console.error(err);

@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Cpu, Search, CheckCircle2, RefreshCw, AlertCircle, Bookmark, Compass, Heart } from 'lucide-react';
 import { BusinessResearch } from '../types';
+import { safeApiRequest } from '../utils/api';
 
 interface ResearchAgentTabProps {
   isDark: boolean;
@@ -25,18 +26,11 @@ export default function ResearchAgentTab({ isDark }: ResearchAgentTabProps) {
     setResearchResult(null);
 
     try {
-      const response = await fetch('/api/business-research', {
+      const data = await safeApiRequest('/api/business-research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, industry })
       });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Research failed to complete.');
-      }
-
-      const data = await response.json();
       setResearchResult(data);
     } catch (err: any) {
       console.error(err);

@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { FileText, Sparkles, Printer, RefreshCw, Bookmark, AlertCircle, Calendar, ShieldCheck, DollarSign, BookOpen } from 'lucide-react';
 import { Lead, Proposal, ConsultantProfile } from '../types';
+import { safeApiRequest } from '../utils/api';
 
 interface ProposalGeneratorTabProps {
   leads: Lead[];
@@ -40,18 +41,11 @@ export default function ProposalGeneratorTab({
     setError(null);
 
     try {
-      const response = await fetch('/api/generate-proposal', {
+      const data = await safeApiRequest('/api/generate-proposal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead, coverStyle })
       });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to generate proposal.');
-      }
-
-      const data = await response.json();
       const newProp: Proposal = {
         ...data,
         id: `prop-${Date.now()}`,

@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Search, Globe, Filter, Star, Sparkles, Building2, MapPin, DollarSign, Users, Link2, Plus, ArrowRight, RefreshCw, Eye } from 'lucide-react';
 import { Lead } from '../types';
+import { safeApiRequest } from '../utils/api';
 
 interface LeadFinderTabProps {
   onLeadsAdded: (leads: Lead[]) => void;
@@ -115,7 +116,7 @@ export default function LeadFinderTab({ onLeadsAdded, onLeadSingleAdded, isDark 
     });
 
     try {
-      const response = await fetch('/api/generate-leads', {
+      const data = await safeApiRequest('/api/generate-leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -124,13 +125,6 @@ export default function LeadFinderTab({ onLeadsAdded, onLeadSingleAdded, isDark 
           additionalNotes: `${searchNotes}. Natural prompt request: "${prompt}". Tech stack: ${techUsed}. Revenue filter: ${revenueRange}. Employee filter: ${employeeCount}. Max website quality score limit: ${minWebsiteScore}.`
         })
       });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Server returned an error scanning Google records.');
-      }
-
-      const data = await response.json();
       
       // Inject some advanced fields to results
       const enriched = data.map((item: any, idx: number) => ({
